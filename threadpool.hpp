@@ -37,25 +37,36 @@ namespace maxtek
     class threadpool
     {
     public:
-        threadpool(size_t threads);
+        threadpool(size_t threads = std::thread::hardware_concurrency());
 
-        ~threadpool() = default;
+        ~threadpool();
 
         template <class F, class... Args>
         std::future<std::result_of_t<F(Args...)>> submit(F &&function, Args &&...args)
         {
             std::shared_ptr<std::packaged_task<std::result_of_t<F(Args...)>()>> packaged_task;
-            std::function<void()> task;
+
+            packaged_task = std::make_shared<std::packaged_task<std::result_of_t<F(Args...)>()>>(std::bind(std::forward<F>(function), std::forward<Args>(args)...));
+
+            push_task(
+                std::move(
+                    [&]()
+                    { 
+                        (*packaged_task)(); 
+                    }));
 
             return packaged_task->get_future();
         }
 
-    private:
-        void push_task(std::function<void()>&& task);
-        bool pop_task(std::function<void()>& task);
+        void shutdown();
 
-        std::vector<std::thread> _worker_threads;
-        std::queue<std::function<void()>> _task_queue;
+    private:
+        void push_task(std::function<void()> &&task);
+        bool pop_task(std::function<void()> &task);
+
+        std::atomic<bool> _active;
+        std::vector<std::thread> _workers;
+        std::queue<std::function<void()>> _tasks;
     };
 }
 
