@@ -64,9 +64,11 @@ namespace maxtek
         void push_task(std::function<void()> &&task);
         bool pop_task(std::function<void()> &task);
 
-        std::atomic<bool> _active;
+        bool _active;
         std::vector<std::thread> _workers;
         std::queue<std::function<void()>> _tasks;
+        std::mutex _mutex;
+        std::condition_variable _condition;
     };
 }
 

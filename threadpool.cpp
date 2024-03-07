@@ -5,15 +5,15 @@ maxtek::threadpool::threadpool(size_t threads) : _workers(threads)
     const std::function<void()> worker_function = [&]()
     {
         std::function<void()> task;
-        while(pop_task(task))
+        while (pop_task(task))
         {
             task();
         }
     };
 
-    _active.store(true);
+    _active = true;
 
-    while(_workers.size() < _workers.capacity())
+    while (_workers.size() < _workers.capacity())
     {
         _workers.push_back(std::thread(worker_function));
     }
@@ -21,7 +21,7 @@ maxtek::threadpool::threadpool(size_t threads) : _workers(threads)
 
 maxtek::threadpool::~threadpool()
 {
-    if(!_active)
+    if (!_active)
     {
         shutdown();
     }
@@ -29,24 +29,44 @@ maxtek::threadpool::~threadpool()
 
 void maxtek::threadpool::shutdown()
 {
-    if(_active.load())
+    if (_active)
     {
-        _active.store(false);
+        _active = false;
+        _condition.notify_all();
+        for(std::thread& worker : _workers)
+        {
+            worker.join();
+        }
     }
 }
 
-
 void maxtek::threadpool::push_task(std::function<void()> &&task)
 {
-    if(!_active.load())
+    std::unique_lock<std::mutex> lock(_mutex);
+    if (!_active)
     {
         throw std::runtime_error("failed to submit to inactive threadpool");
     }
-
+    _tasks.push(std::move(task));
+    lock.unlock();
+    _condition.notify_one();
 }
 
 bool maxtek::threadpool::pop_task(std::function<void()> &task)
 {
-    return false;
+    std::unique_lock<std::mutex> lock(_mutex);
+    bool result(false);
+    _condition.wait(
+        lock,
+        [&]()
+        { 
+            return (!_active || !_tasks.empty()); 
+        });
+    if (_active)
+    {
+        task = _tasks.front();
+        _tasks.pop();
+        result = true;
+    }
+    return result;
 }
-
