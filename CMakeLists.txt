@@ -14,3 +14,5 @@ target_include_directories(threadpool PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 if(THREADPOOL_TESTS)
     add_subdirectory(tests)
 endif()
+
+add_subdirectory(example)
