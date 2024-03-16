@@ -1,22 +1,28 @@
+#include <iostream>
 #include "threadpool.hpp"
 
-maxtek::threadpool::threadpool(size_t threads) : _workers(threads)
+maxtek::threadpool::threadpool(size_t threads) : num_threads(threads)
 {
     const std::function<void()> worker_function = [&]()
     {
         std::function<void()> task;
+	std::cout << "Trying to pop task\n";
         while (pop_task(task))
         {
+	    std::cout << "Popped task\n";
             task();
         }
     };
 
     _active = true;
 
-    while (_workers.size() < _workers.capacity())
+    for (int i = 0; i < num_threads; ++i)
     {
         _workers.push_back(std::thread(worker_function));
     }
+
+    for (std::thread& t : _workers)
+        t.detach();
 }
 
 maxtek::threadpool::~threadpool()
