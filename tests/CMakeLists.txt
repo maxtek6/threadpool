@@ -3,7 +3,7 @@ add_executable(
     unit.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../threadpool.cpp)
 
-target_include_directories(unit PRIVATE ${SIGFN_INCLUDE})
+target_include_directories(unit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 if(THREADPOOL_COVER)
     if(WIN32)
