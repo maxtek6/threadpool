@@ -72,5 +72,4 @@ namespace maxtek
         std::condition_variable _condition;
     };
 }
-
 #endif
