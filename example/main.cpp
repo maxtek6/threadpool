@@ -17,8 +17,8 @@ int main()
     threadpool myThreadPool(5);
   
     std::future<void> future = myThreadPool.submit(trivialFunc);
-    future.wait();
-   // myThreadPool.shutdown();
-    while(1);
+    // TODO: Use future properly
+    //future.wait();
+    while (1);
     return 0;
 }
