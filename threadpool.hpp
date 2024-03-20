@@ -64,6 +64,7 @@ namespace maxtek
         void push_task(std::function<void()> &&task);
         bool pop_task(std::function<void()> &task);
 
+	size_t num_threads;
         bool _active;
         std::vector<std::thread> _workers;
         std::queue<std::function<void()>> _tasks;
@@ -71,5 +72,4 @@ namespace maxtek
         std::condition_variable _condition;
     };
 }
-
 #endif
