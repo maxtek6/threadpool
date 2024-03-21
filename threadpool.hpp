@@ -59,7 +59,7 @@ namespace maxtek
          * @brief constructs a new threadpool
          *
          * @param threads number of threads to use for constructing the threadpool
-         * @exception fails if threads is set to zero
+         * @exception std::runtime_error if threads is set to zero
          */
         threadpool(size_t threads = std::thread::hardware_concurrency());
 
@@ -75,6 +75,7 @@ namespace maxtek
          * @param function function signature
          * @param args arguments to pass to the function
          * @returns a future holding the asynchronous function result
+         * @exception std::runtime_error if the thread pool has been shut down
         */
         template <class F, class... Args>
         std::future<std::result_of_t<F(Args...)>> submit(F &&function, Args &&...args)
@@ -104,6 +105,7 @@ namespace maxtek
 
         /**
          * @brief shut down threadpool by joining threads and rejecting submissions
+         * @exception std::runtime_error if the thread pool has already been shut down
         */
         void shutdown();
 
