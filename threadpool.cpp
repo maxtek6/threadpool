@@ -3,15 +3,20 @@
 
 maxtek::threadpool::threadpool(size_t threads) : num_threads(threads)
 {
+    if(threads == 0)
+    {
+        throw std::runtime_error("invalid threadpool size");
+    }
+
     const std::function<void()> worker_function = [&]()
     {
         std::function<void()> task;
         while (pop_task(task))
         {
-	    if (task != nullptr)
-	    {
-	        task();
-	    }
+            if (task != nullptr)
+            {
+                task();
+            }
         }
     };
 
@@ -22,16 +27,21 @@ maxtek::threadpool::threadpool(size_t threads) : num_threads(threads)
         _workers.push_back(std::thread(worker_function));
     }
 
-    for (std::thread& t : _workers)
+    for (std::thread &t : _workers)
         t.detach();
 }
 
 maxtek::threadpool::~threadpool()
 {
-    if (!_active)
+    if (_active)
     {
         shutdown();
     }
+}
+
+bool maxtek::threadpool::active() const
+{
+    return _active;
 }
 
 void maxtek::threadpool::shutdown()
@@ -40,7 +50,7 @@ void maxtek::threadpool::shutdown()
     {
         _active = false;
         _condition.notify_all();
-        for(std::thread& worker : _workers)
+        for (std::thread &worker : _workers)
         {
             worker.join();
         }
@@ -66,8 +76,8 @@ bool maxtek::threadpool::pop_task(std::function<void()> &task)
     _condition.wait(
         lock,
         [&]()
-        { 
-            return (!_active || !_tasks.empty()); 
+        {
+            return (!_active || !_tasks.empty());
         });
     if (_active)
     {

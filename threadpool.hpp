@@ -58,6 +58,8 @@ namespace maxtek
             return packaged_task->get_future();
         }
 
+        bool active() const;
+
         void shutdown();
 
     private:

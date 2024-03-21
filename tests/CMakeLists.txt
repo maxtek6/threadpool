@@ -20,4 +20,6 @@ if(THREADPOOL_COVER)
     endif()
 endif()
 
-add_test(NAME test_c_handle COMMAND unit HANDLE_C)
+add_test(NAME test_constructor COMMAND unit CONSTRUCTOR)
+add_test(NAME test_submit COMMAND unit SUBMIT)
+add_test(NAME test_shutdown COMMAND unit SHUTDOWN)
