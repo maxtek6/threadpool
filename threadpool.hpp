@@ -23,6 +23,12 @@
 #ifndef THREADPOOL_HPP
 #define THREADPOOL_HPP
 
+/**
+ * @file threadpool.hpp
+ * @brief Maxtek threadpool
+ * @author Max Guerrero and John R. Patek Sr.
+ */
+
 #include <algorithm>
 #include <functional>
 #include <future>
@@ -32,15 +38,44 @@
 #include <typeinfo>
 #include <vector>
 
+#ifdef _WIN32
+#define DLL_EXPORT __declspec(dllexport)
+#else
+#define DLL_EXPORT
+#endif
+
 namespace maxtek
 {
-    class threadpool
+    /**
+     * @brief threadpool
+     *
+     * @class allows tasks to be submitted and exexuted asynchronously across multiple threads.
+     */
+    class DLL_EXPORT threadpool
     {
     public:
+        
+        /**
+         * @brief constructs a new threadpool
+         *
+         * @param threads number of threads to use for constructing the threadpool
+         * @exception fails if threads is set to zero
+         */
         threadpool(size_t threads = std::thread::hardware_concurrency());
 
+        /**
+         * @brief destroys threadpool after calling shutdown if necessary
+        */
         ~threadpool();
 
+        /**
+         * @brief submits a function with its arguments to the threadpool
+         * @tparam F function signature
+         * @tparam Args function argument types
+         * @param function function signature
+         * @param args arguments to pass to the function
+         * @returns a future holding the asynchronous function result
+        */
         template <class F, class... Args>
         std::future<std::result_of_t<F(Args...)>> submit(F &&function, Args &&...args)
         {
@@ -61,8 +96,15 @@ namespace maxtek
             return result;
         }
 
+        /**
+         * @brief check if the threadpool is active
+         * @returns true if the threadpool is active, false if it has been shut down
+        */
         bool active() const;
 
+        /**
+         * @brief shut down threadpool by joining threads and rejecting submissions
+        */
         void shutdown();
 
     private:
