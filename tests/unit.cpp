@@ -70,18 +70,18 @@ void test_assert(
 void test_constuctor()
 {
     std::unique_ptr<maxtek::threadpool> threadpool;
-    bool caught;
+    bool has_error;
 
-    caught = false;
+    has_error = false;
     try
     {
         threadpool = std::unique_ptr<maxtek::threadpool>(new maxtek::threadpool(0));
     }
     catch(const std::exception& exception)
     {
-        caught = true;
+        has_error = true;
     }
-    TEST_ASSERT(caught);
+    TEST_ASSERT(has_error);
 
     threadpool = std::unique_ptr<maxtek::threadpool>(new maxtek::threadpool(4));
     TEST_ASSERT(threadpool != nullptr);
@@ -89,7 +89,35 @@ void test_constuctor()
 
 void test_submit()
 {
+    const std::function<bool()> time_wasting_activity = []()
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        return true;
+    };
+    std::unique_ptr<maxtek::threadpool> threadpool(new maxtek::threadpool(4));
+    bool done;
+    bool has_error;
+    std::future<bool> future_result;
 
+    done = false;
+    future_result = threadpool->submit(time_wasting_activity);
+    done = future_result.get();
+    TEST_ASSERT(done);
+
+    done = false;
+    has_error = false;
+    try
+    {
+        threadpool->shutdown();
+        future_result = threadpool->submit(time_wasting_activity);
+        done = future_result.get();
+    }
+    catch(const std::exception& e)
+    {
+        has_error = true;
+    }
+    TEST_ASSERT(!done);
+    TEST_ASSERT(has_error);
 }
 
 void test_shutdown()
