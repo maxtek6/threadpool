@@ -3,7 +3,7 @@ add_executable(
     unit.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../threadpool.cpp)
 
-target_include_directories(unit PRIVATE ${SIGFN_INCLUDE})
+target_include_directories(unit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 if(THREADPOOL_COVER)
     if(WIN32)
@@ -20,4 +20,6 @@ if(THREADPOOL_COVER)
     endif()
 endif()
 
-add_test(NAME test_c_handle COMMAND unit HANDLE_C)
+add_test(NAME test_constructor COMMAND unit CONSTRUCTOR)
+add_test(NAME test_submit COMMAND unit SUBMIT)
+add_test(NAME test_shutdown COMMAND unit SHUTDOWN)

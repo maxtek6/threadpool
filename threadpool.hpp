@@ -45,18 +45,23 @@ namespace maxtek
         std::future<std::result_of_t<F(Args...)>> submit(F &&function, Args &&...args)
         {
             std::shared_ptr<std::packaged_task<std::result_of_t<F(Args...)>()>> packaged_task;
+            std::function<void()> work;
+            std::future<std::result_of_t<F(Args...)>> result;
 
             packaged_task = std::make_shared<std::packaged_task<std::result_of_t<F(Args...)>()>>(std::bind(std::forward<F>(function), std::forward<Args>(args)...));
+            result = packaged_task->get_future();
 
-            push_task(
-                std::move(
-                    [&]()
-                    { 
-                        (*packaged_task)(); 
-                    }));
+            work = [packaged_task]()
+            {
+                (*packaged_task)();
+            };
 
-            return packaged_task->get_future();
+            push_task(std::move(work));
+
+            return result;
         }
+
+        bool active() const;
 
         void shutdown();
 
@@ -64,7 +69,7 @@ namespace maxtek
         void push_task(std::function<void()> &&task);
         bool pop_task(std::function<void()> &task);
 
-	size_t num_threads;
+        size_t num_threads;
         bool _active;
         std::vector<std::thread> _workers;
         std::queue<std::function<void()>> _tasks;
