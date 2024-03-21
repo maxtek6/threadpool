@@ -123,7 +123,20 @@ void test_submit()
 void test_shutdown()
 {
     std::unique_ptr<maxtek::threadpool> threadpool(new maxtek::threadpool(4));
+    bool has_error;
+    
     TEST_ASSERT(threadpool->active());
     threadpool->shutdown();
     TEST_ASSERT(!threadpool->active()); 
+
+    has_error = false;
+    try
+    {
+        threadpool->shutdown();
+    }
+    catch(const std::exception& e)
+    {
+        has_error = true;
+    }
+    TEST_ASSERT(has_error);
 }

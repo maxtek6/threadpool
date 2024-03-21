@@ -43,13 +43,12 @@ void maxtek::threadpool::shutdown()
     {
         throw std::runtime_error("failed to shut down inactive threadpool");
     }
-        _active = false;
-        _condition.notify_all();
-        for (std::thread &worker : _workers)
-        {
-            worker.join();
-        }
-    
+    _active = false;
+    _condition.notify_all();
+    for (std::thread &worker : _workers)
+    {
+        worker.join();
+    }
 }
 
 void maxtek::threadpool::push_task(std::function<void()> &&task)
