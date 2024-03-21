@@ -5,7 +5,7 @@ maxtek::threadpool::threadpool(size_t threads)
 {
     if (threads == 0)
     {
-        throw std::runtime_error("invalid threadpool size");
+        throw std::runtime_error("failed to construct threadpool with zero threads");
     }
 
     _active = true;
@@ -19,10 +19,7 @@ maxtek::threadpool::threadpool(size_t threads)
         std::function<void()> task;
         while (pop_task(task))
         {
-            if (task)
-            {
-                task();
-            }
+            task();
         } }));
     }
 }
@@ -42,14 +39,15 @@ bool maxtek::threadpool::active() const
 
 void maxtek::threadpool::shutdown()
 {
-    if (_active)
+    if (!_active)
     {
-        _active = false;
-        _condition.notify_all();
-        for (std::thread &worker : _workers)
-        {
-            worker.join();
-        }
+        throw std::runtime_error("failed to shut down inactive threadpool");
+    }
+    _active = false;
+    _condition.notify_all();
+    for (std::thread &worker : _workers)
+    {
+        worker.join();
     }
 }
 
@@ -75,7 +73,7 @@ bool maxtek::threadpool::pop_task(std::function<void()> &task)
         {
             return (!_active || !_tasks.empty());
         });
-    if (_active && !_tasks.empty())
+    if (_active)
     {
         task = _tasks.front();
         _tasks.pop();
