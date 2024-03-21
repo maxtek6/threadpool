@@ -17,4 +17,4 @@ FILE_PATTERNS          = *.hpp \
                          *.md
 EXTRACT_ALL            = YES
 OUTPUT_DIRECTORY       = @CMAKE_BINARY_DIR@/docs
-USE_MDFILE_AS_MAINPAGE = READEM.md
+USE_MDFILE_AS_MAINPAGE = README.md
