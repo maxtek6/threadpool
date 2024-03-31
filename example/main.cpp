@@ -18,32 +18,29 @@ class consumerProducerExample
         {
             item_buf.reserve(buffer_size);
             producer_futures.reserve(num_producer_threads);
-            myThreadPool = new threadpool(num_producer_threads + num_consumer_threads);
+            myThreadPool = std::make_unique<threadpool>(num_producer_threads + num_consumer_threads);
         }
 
         void run()
         {
-            buffering_active = 1;
+            buffering_active = true;
             for (int i = 0 ; i < num_consumer_threads; ++i)
             {
                 auto consumerTask = std::bind(&consumerProducerExample::consumerThread, this);
                 myThreadPool->submit(consumerTask);
-                // Why didn't the below line work?
-                // myThreadPool->submit(consumerProducerExample::consumerThread);
             }
 
             for (int i = 0; i < num_producer_threads; ++i)
             {
                 auto producerTask = std::bind(&consumerProducerExample::producerThread, this);
                 producer_futures[i] = myThreadPool->submit(producerTask);
-                //myThreadPool->submit(consumerProducerExample::producerThread);
             }
         }
 
         void stop()
         {
             std::unique_lock<std::mutex> lock(mtx);
-            buffering_active = 0;
+            buffering_active = false;
             lock.unlock();
             cv.notify_all();
             for (int i = 0; i < num_producer_threads; ++i)
@@ -51,7 +48,6 @@ class consumerProducerExample
                 std::cout << "Producer: " << (i + 1) << ", Num bytes: " << producer_futures[i].get() << "\n";
             }
             myThreadPool->shutdown();
-            delete myThreadPool;
         }
 
         ~consumerProducerExample()
@@ -73,7 +69,7 @@ class consumerProducerExample
         std::mutex mtx;
         std::condition_variable cv;
         std::vector<int> item_buf;
-        threadpool *myThreadPool;
+	std::unique_ptr<threadpool> myThreadPool;
         std::vector<std::future<int>> producer_futures;
 
         int get_random_int()
