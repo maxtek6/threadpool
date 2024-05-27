@@ -49,12 +49,12 @@ namespace maxtek
     /**
      * @brief threadpool
      *
-     * @class allows tasks to be submitted and exexuted asynchronously across multiple threads.
+     * @class allows tasks to be submitted and executed asynchronously across multiple threads.
      */
     class DLL_EXPORT threadpool
     {
     public:
-        
+
         /**
          * @brief constructs a new threadpool
          *
