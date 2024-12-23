@@ -61,12 +61,38 @@ namespace maxtek
          * @param threads number of threads to use for constructing the threadpool
          * @exception std::runtime_error if threads is set to zero
          */
-        threadpool(size_t threads = std::thread::hardware_concurrency());
+        threadpool(size_t threads = std::thread::hardware_concurrency())
+        {
+            if (threads == 0)
+            {
+                throw std::runtime_error("failed to construct threadpool with zero threads");
+            }
 
+            _active = true;
+
+            _workers.reserve(threads);
+
+            while (_workers.size() < _workers.capacity())
+            {
+                _workers.push_back(std::thread([&]()
+                                            {
+                std::function<void()> task;
+                while (pop_task(task))
+                {
+                    task();
+                } }));
+            }
+        }
         /**
          * @brief destroys threadpool after calling shutdown if necessary
         */
-        ~threadpool();
+        ~threadpool()
+        {
+            if (_active)
+            {
+                shutdown();
+            }
+        }
 
         /**
          * @brief submits a function with its arguments to the threadpool
@@ -101,17 +127,61 @@ namespace maxtek
          * @brief check if the threadpool is active
          * @returns true if the threadpool is active, false if it has been shut down
         */
-        bool active() const;
+        bool active() const
+        {
+            return _active;
+        }
 
         /**
          * @brief shut down threadpool by joining threads and rejecting submissions
          * @exception std::runtime_error if the thread pool has already been shut down
         */
-        void shutdown();
+        void shutdown()
+        {
+            if (!_active)
+            {
+                throw std::runtime_error("failed to shut down inactive threadpool");
+            }
+            _active = false;
+            _condition.notify_all();
+            for (std::thread &worker : _workers)
+            {
+                worker.join();
+            }
+        }
 
     private:
-        void push_task(std::function<void()> &&task);
-        bool pop_task(std::function<void()> &task);
+        void push_task(std::function<void()> &&task)
+        {
+            std::unique_lock<std::mutex> lock(_mutex);
+            if (!_active)
+            {
+                throw std::runtime_error("failed to submit to inactive threadpool");
+            }
+            _tasks.push(std::move(task));
+            lock.unlock();
+            _condition.notify_one();
+        }
+
+        bool pop_task(std::function<void()> &task)
+        {
+            std::unique_lock<std::mutex> lock(_mutex);
+            bool result(false);
+            _condition.wait(
+                lock,
+                [&]()
+                {
+                    return (!_active || !_tasks.empty());
+                });
+            if (_active)
+            {
+                task = _tasks.front();
+                _tasks.pop();
+                result = true;
+            }
+            return result;
+        }
+
 
         size_t num_threads;
         bool _active;
