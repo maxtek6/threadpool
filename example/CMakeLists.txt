@@ -1,3 +1,3 @@
 add_executable(example main.cpp)
 
-target_link_libraries(example threadpool_a)
+target_link_libraries(example PRIVATE threadpool)
