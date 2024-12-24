@@ -38,12 +38,6 @@
 #include <typeinfo>
 #include <vector>
 
-#ifdef _WIN32
-#define DLL_EXPORT __declspec(dllexport)
-#else
-#define DLL_EXPORT
-#endif
-
 namespace maxtek
 {
     /**
@@ -51,7 +45,7 @@ namespace maxtek
      *
      * @class allows tasks to be submitted and executed asynchronously across multiple threads.
      */
-    class DLL_EXPORT threadpool
+    class threadpool
     {
     public:
 

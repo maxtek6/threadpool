@@ -1,9 +1,11 @@
 add_executable(
     unit 
-    unit.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../threadpool.cpp)
+    unit.cpp)
 
-target_include_directories(unit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+target_link_libraries(
+    unit 
+    PRIVATE 
+    threadpool)
 
 if(THREADPOOL_COVER)
     if(WIN32)

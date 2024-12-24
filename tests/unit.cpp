@@ -42,9 +42,9 @@ int main(int argc, const char **argv)
             const std::function<void()> &unit_test = unit_tests.at(argv[1]);
             unit_test();
         }
-        catch (const std::exception &exception)
+        catch (const std::exception &e)
         {
-            std::cerr << exception.what() << std::endl;
+            std::cerr << e.what() << std::endl;
             result = FAIL;
         }
     }
@@ -77,9 +77,9 @@ void test_constuctor()
     {
         threadpool = std::unique_ptr<maxtek::threadpool>(new maxtek::threadpool(0));
     }
-    catch(const std::exception& exception)
+    catch(const std::exception& e)
     {
-        has_error = true;
+        has_error = (e.what() != nullptr);
     }
     TEST_ASSERT(has_error);
 
@@ -114,7 +114,7 @@ void test_submit()
     }
     catch(const std::exception& e)
     {
-        has_error = true;
+       has_error = (e.what() != nullptr);
     }
     TEST_ASSERT(!done);
     TEST_ASSERT(has_error);
@@ -136,7 +136,7 @@ void test_shutdown()
     }
     catch(const std::exception& e)
     {
-        has_error = true;
+        has_error = (e.what() != nullptr);
     }
     TEST_ASSERT(has_error);
 }
